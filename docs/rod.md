@@ -27,3 +27,12 @@ sudo /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-deb
 
 `ws://127.0.0.1:9222/devtools/browser/5293bae5-6cea-454b-9558-5889a1abb9ac`
 
+----
+
+## 测试
+
+### 1-rod
+
+经测试，`go-rod` 无法截取请求过程中的其他异步请求。通过分析 `ctx.MustLoadResponse()` 方法的源码后可知：其内部是通过 `http.Client` 对当前拦截到的url发起的另一次请求，跟当前拦截的请求并没有关系。
+这样的话，当前被拦截的请求的响应数据是无法获取到的，而得到的请求响应数据是再次发起请求后得到的，结果可能并不是想要的。
+
