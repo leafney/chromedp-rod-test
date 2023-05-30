@@ -14,11 +14,13 @@ import (
 	"github.com/go-rod/rod/lib/input"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/rod/lib/utils"
+	"os"
 	"time"
 )
 
 func main() {
-	wsUrl := "ws://127.0.0.1:9222/devtools/browser/81f2c529-92be-4b6d-8866-de08019c67f8"
+	wsId := "7e0ad1a0-6a63-4c12-b8f1-045c74752767"
+	wsUrl := fmt.Sprintf("ws://127.0.0.1:9222/devtools/browser/%s", wsId)
 
 	browser := rod.New().ControlURL(wsUrl).MustConnect().NoDefaultDevice()
 	//defer browser.MustClose()
@@ -28,8 +30,8 @@ func main() {
 	// 禁止弹窗
 	page.MustEvalOnNewDocument(`window.alert = () => {};window.prompt = () => {}`)
 
-	utils.Sleep(10)
 	fmt.Println("准备开始")
+	utils.Sleep(20)
 
 	// 阻止请求图片、视频、字体文件等类型
 	hijackVideoImage(page)
@@ -72,6 +74,10 @@ func main() {
 
 	// 第三次滚动
 	swipeUpToLoadMore(page, 2)
+
+	// 获取网页内容
+	pageHtml := page.MustEval(`() => document.documentElement.outerHTML`).Str()
+	os.WriteFile("tmp1.txt", []byte(pageHtml), 0644)
 
 	fmt.Println("success")
 
