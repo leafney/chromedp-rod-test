@@ -1,7 +1,7 @@
 ## rod
 
-- [go-rod/rod: A Devtools driver for web automation and scraping](https://github.com/go-rod/rod) 
-- 
+- [go-rod/rod: A Devtools driver for web automation and scraping](https://github.com/go-rod/rod)
+- [rod/lib/examples at main · go-rod/rod · GitHub](https://github.com/go-rod/rod/tree/main/lib/examples)
 
 ## 依赖
 
