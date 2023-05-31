@@ -7,6 +7,7 @@ require (
 	github.com/chromedp/chromedp v0.9.1
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-rod/rod v0.113.1
+	rogchap.com/v8go v0.9.0
 )
 
 require (

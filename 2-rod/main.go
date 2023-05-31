@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	wsId := "7e0ad1a0-6a63-4c12-b8f1-045c74752767"
+	wsId := "7fd3b645-0b3b-4346-9f25-22b8b99ec26f"
 	wsUrl := fmt.Sprintf("ws://127.0.0.1:9222/devtools/browser/%s", wsId)
 
 	browser := rod.New().ControlURL(wsUrl).MustConnect().NoDefaultDevice()
@@ -39,6 +39,7 @@ func main() {
 	//
 	page.
 		MustNavigate("https://www.youtube.com/")
+
 	//MustNavigate("https://www.iplaysoft.com/").
 	//MustWaitLoad()
 	//MustClose()
@@ -73,7 +74,7 @@ func main() {
 	//fmt.Println(val2)
 
 	// 第三次滚动
-	swipeUpToLoadMore(page, 2)
+	swipeUpToLoadMore(page, 0)
 
 	// 获取网页内容
 	pageHtml := page.MustEval(`() => document.documentElement.outerHTML`).Str()
