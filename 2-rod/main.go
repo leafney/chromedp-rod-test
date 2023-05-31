@@ -74,16 +74,22 @@ func main() {
 	//fmt.Println(val2)
 
 	// 第三次滚动
-	swipeUpToLoadMore(page, 0)
+	//swipeUpToLoadMore(page, 0)
 
 	// 获取网页内容
-	pageHtml := page.MustEval(`() => document.documentElement.outerHTML`).Str()
-	os.WriteFile("tmp1.txt", []byte(pageHtml), 0644)
+	//saveHtml(page)
+
+	// 测试点击，输入
 
 	fmt.Println("success")
 
 	time.Sleep(time.Hour)
 	page.MustClose()
+}
+
+func saveHtml(page *rod.Page) {
+	pageHtml := page.MustEval(`() => document.documentElement.outerHTML`).Str()
+	os.WriteFile("tmp1.txt", []byte(pageHtml), 0644)
 }
 
 // 上滑页面加载更多

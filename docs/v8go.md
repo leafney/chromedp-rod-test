@@ -18,5 +18,7 @@ import v8 "rogchap.com/v8go"
 
 了解到 `v8go` 并不支持调用 `nodejs` 相关的api，比如 `require` 。所以得采用其他的方法来执行 `nodejs` 相关的方法。
 
+而上面示例中的 `jquery` 类内部没有使用到 `require` ，即 `纯js方法` 是可以执行的。
+
 ----
 
