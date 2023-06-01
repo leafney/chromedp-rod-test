@@ -36,3 +36,27 @@ sudo /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-deb
 经测试，`go-rod` 无法截取请求过程中的其他异步请求。通过分析 `ctx.MustLoadResponse()` 方法的源码后可知：其内部是通过 `http.Client` 对当前拦截到的url发起的另一次请求，跟当前拦截的请求并没有关系。
 这样的话，当前被拦截的请求的响应数据是无法获取到的，而得到的请求响应数据是再次发起请求后得到的，结果可能并不是想要的。
 
+----
+
+| 操作类型 | 选择方式 | 选择元素 | 动作类型 | 动作内容 | 说明 |
+| -- |
+| navigate |   |   |   |   | www.baidu.com | 打开网址 |
+| find | element | "body > footer" | visible |     | 等待元素显示 |
+| find | element | "#pkg-examples" | cick |     | 找到某元素并点击 |
+| find | element | ".text"         | input | "hello" | 找到某元素然后输入内容 |
+| wait |      |      |   wait |   | 等待页面加载 |
+| sleep |     |    |
+
+
+| 动作类型 | 选择方式 | 选择元素 | 动作内容 | 说明 |
+| navigate |     |     | www.baidu.com | 打开网址 |
+| visible | element | ".name" |    | 等待元素显示 |
+| invisible | element | "" |  | 等待元素隐藏 |
+| input | byId | "#title" |  "hello" | 找到某元素输入内容  |
+| click |    |     |    |  找到某元素并点击 |
+| wait |    |    |    | 等待页面加载 |
+| sleep |    |    | 10 | 停止10s |
+| eval |   |   | js script | 执行js代码 |
+| console |    |   |  js script | 在 DevTools 中执行js script |
+
+----
