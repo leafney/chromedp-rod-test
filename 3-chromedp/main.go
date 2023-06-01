@@ -61,6 +61,7 @@ func main() {
 
 		chromedp.WaitVisible(`div#news`),
 
+		//chromedp.Evaluate(),
 		chromedp.EvaluateAsDevTools(`window.scroll(0,500) || "a";`, &x),
 
 		chromedp.SendKeys(`#input`, "JT3032192857289", chromedp.ByID),

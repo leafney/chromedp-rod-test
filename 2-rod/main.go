@@ -14,12 +14,13 @@ import (
 	"github.com/go-rod/rod/lib/input"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/rod/lib/utils"
+	"github.com/leafney/rose"
 	"os"
 	"time"
 )
 
 func main() {
-	wsId := "7fd3b645-0b3b-4346-9f25-22b8b99ec26f"
+	wsId := "8fa4d1f0-8481-4a0c-8bbc-8400be7b7214"
 	wsUrl := fmt.Sprintf("ws://127.0.0.1:9222/devtools/browser/%s", wsId)
 
 	browser := rod.New().ControlURL(wsUrl).MustConnect().NoDefaultDevice()
@@ -37,8 +38,8 @@ func main() {
 	hijackVideoImage(page)
 
 	//
-	page.
-		MustNavigate("https://www.youtube.com/")
+	//page.
+	//	MustNavigate("https://www.youtube.com/")
 
 	//MustNavigate("https://www.iplaysoft.com/").
 	//MustWaitLoad()
@@ -80,6 +81,7 @@ func main() {
 	//saveHtml(page)
 
 	// 测试点击，输入
+	AutoRunAction(page)
 
 	fmt.Println("success")
 
@@ -87,6 +89,43 @@ func main() {
 	page.MustClose()
 }
 
+// ----------------------
+
+type ActionModel struct {
+	Action  string `json:"action"`
+	Method  string `json:"method"`
+	Element string `json:"element"`
+	Content string `json:"content"`
+}
+
+func AutoRunAction(page *rod.Page) {
+	actionStr := `[{"action":"navigate","method":"","element":"","content":"https://www.baidu.com/"},{"action":"visible","method":"css","element":"#kw","content":""},{"action":"input","method":"css","element":"#kw","content":"golang go-rod"},{"action":"click","method":"css","element":"#su","content":""},{"action":"sleep","method":"","element":"","content":"10"}]`
+	list := make([]ActionModel, 0)
+	rose.JsonUnMarshalStr(actionStr, &list)
+
+	for _, m := range list {
+		switch m.Action {
+		case "navigate":
+			page.MustNavigate(m.Content)
+		case "visible":
+			page.MustElement(m.Element).MustWaitVisible()
+		case "input":
+			page.MustElement(m.Element).MustInput(m.Content)
+		case "click":
+			page.MustElement(m.Element).MustClick()
+		case "sleep":
+			time.Sleep(time.Second * 10)
+		default:
+
+		}
+
+		page.MustWaitLoad().MustWaitIdle()
+	}
+}
+
+// ----------------------
+
+// 保存网页
 func saveHtml(page *rod.Page) {
 	pageHtml := page.MustEval(`() => document.documentElement.outerHTML`).Str()
 	os.WriteFile("tmp1.txt", []byte(pageHtml), 0644)
