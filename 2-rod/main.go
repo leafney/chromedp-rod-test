@@ -9,6 +9,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/input"
@@ -19,20 +21,35 @@ import (
 	"time"
 )
 
-func main() {
-	wsId := "8fa4d1f0-8481-4a0c-8bbc-8400be7b7214"
-	wsUrl := fmt.Sprintf("ws://127.0.0.1:9222/devtools/browser/%s", wsId)
+const (
+	WSID = "be444244-1ca1-4c13-89ba-a9ded25b4eea"
+)
 
-	browser := rod.New().ControlURL(wsUrl).MustConnect().NoDefaultDevice()
+func main3() {
+	rodHandle(WSID)
+}
+
+func main() {
+	//wsId := "443fefad-a3ee-458f-b82a-a67b5263388e"
+	wsUrl := fmt.Sprintf("ws://127.0.0.1:9222/devtools/browser/%s", WSID)
+
+	browser := rod.New().ControlURL(wsUrl).MustConnect().NoDefaultDevice().Trace(true).SlowMotion(time.Second)
 	//defer browser.MustClose()
 
-	// tab页
+	// 新建一个tab页
 	page := browser.MustPage()
+
+	//defer func() {
+	//	fmt.Println("即将关闭Tab页")
+	//	time.Sleep(3 * time.Second)
+	//	page.MustClose()
+	//}()
+
 	// 禁止弹窗
 	page.MustEvalOnNewDocument(`window.alert = () => {};window.prompt = () => {}`)
 
 	fmt.Println("准备开始")
-	utils.Sleep(20)
+	//utils.Sleep(20)
 
 	// 阻止请求图片、视频、字体文件等类型
 	hijackVideoImage(page)
@@ -46,7 +63,7 @@ func main() {
 	//MustClose()
 
 	// 等待页面加载完成 方式一
-	page.MustWaitLoad().MustWaitIdle()
+	//page.MustWaitLoad().MustWaitIdle()
 
 	// 等待页面加载完成 方式二
 	//wait := page.MustWaitRequestIdle()
@@ -54,10 +71,10 @@ func main() {
 	//wait()
 
 	fmt.Println("RequestIdle")
-	utils.Sleep(10)
+	utils.Sleep(5)
 
-	val1 := page.MustEval(`() => document.documentElement.scrollHeight`).Str()
-	fmt.Println(val1)
+	//val1 := page.MustEval(`() => document.documentElement.scrollHeight`).Str()
+	//fmt.Println(val1)
 
 	// 第二种方式向下滚动页面，直到滚动到底部
 	//page.Mouse.MustScroll(0, 300)
@@ -83,10 +100,28 @@ func main() {
 	// 测试点击，输入
 	AutoRunAction(page)
 
+	swipeUpToLoadMore(page, 2)
+
 	fmt.Println("success")
 
 	time.Sleep(time.Hour)
 	page.MustClose()
+}
+
+// ----------------------
+
+// 独立方法，测试 defer 使用
+func rodHandle(wsId string) {
+	wsUrl := fmt.Sprintf("ws://127.0.0.1:9222/devtools/browser/%s", wsId)
+	b := rod.New().ControlURL(wsUrl).MustConnect().Trace(true)
+	//defer b.MustClose()
+
+	page := b.MustPage()
+	defer page.MustClose()
+
+	page.MustNavigate("https://www.youtube.com/")
+	page.MustWaitLoad()
+	time.Sleep(time.Second * 20)
 }
 
 // ----------------------
@@ -99,27 +134,47 @@ type ActionModel struct {
 }
 
 func AutoRunAction(page *rod.Page) {
-	actionStr := `[{"action":"navigate","method":"","element":"","content":"https://www.baidu.com/"},{"action":"visible","method":"css","element":"#kw","content":""},{"action":"input","method":"css","element":"#kw","content":"golang go-rod"},{"action":"click","method":"css","element":"#su","content":""},{"action":"sleep","method":"","element":"","content":"10"}]`
+	//actionStr := `[{"action":"navigate","method":"","element":"","content":"https://www.baidu.com/"},{"action":"visible","method":"css","element":"#kw","content":""},{"action":"input","method":"css","element":"#kw","content":"golang go-rod"},{"action":"click","method":"css","element":"#su","content":""},{"action":"sleep","method":"","element":"","content":"10"}]`
+	actionStr := `[{"action":"navigate","method":"","element":"","content":"https://www.youtube.com/"},{"action":"wait","method":"","element":"","content":""},{"action":"input","method":"css","element":"div#search-input #search","content":"golang go-rod"},{"action":"click","method":"css","element":"#search #search-icon-legac","content":""},{"action":"sleep","method":"","element":"","content":"10"}]`
+
 	list := make([]ActionModel, 0)
 	rose.JsonUnMarshalStr(actionStr, &list)
 
-	for _, m := range list {
-		switch m.Action {
-		case "navigate":
-			page.MustNavigate(m.Content)
-		case "visible":
-			page.MustElement(m.Element).MustWaitVisible()
-		case "input":
-			page.MustElement(m.Element).MustInput(m.Content)
-		case "click":
-			page.MustElement(m.Element).MustClick()
-		case "sleep":
-			time.Sleep(time.Second * 10)
-		default:
+	err := rod.Try(func() {
 
+		for _, m := range list {
+			fmt.Println("run ", m.Action)
+
+			switch m.Action {
+			case "navigate":
+				page.MustNavigate(m.Content)
+			case "visible":
+				page.Timeout(10 * time.Second).MustElement(m.Element).MustWaitVisible().CancelTimeout()
+			case "input":
+				page.Timeout(10 * time.Second).MustElement(m.Element).MustInput(m.Content).CancelTimeout()
+			case "click":
+				page.Timeout(10 * time.Second).MustElement(m.Element).MustClick().CancelTimeout()
+			case "sleep":
+				time.Sleep(time.Duration(rose.StrToInt64(m.Content)) * time.Second)
+			case "wait":
+				page.MustWaitIdle().MustWaitIdle()
+			default:
+
+			}
+
+			page.MustWaitLoad().MustWaitIdle()
 		}
+	})
 
-		page.MustWaitLoad().MustWaitIdle()
+	if errors.Is(err, context.DeadlineExceeded) {
+		//	超时
+		fmt.Printf("页面超时 [%v]", err)
+	} else if errors.Is(err, context.Canceled) {
+		//	cancel
+		fmt.Printf("页面取消 [%v]", err)
+	} else {
+		//	other
+		fmt.Printf("其他错误 [%v]", err)
 	}
 }
 
