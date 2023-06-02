@@ -282,6 +282,10 @@ func slidePageDownEnd(page *rod.Page) {
 	page.MustEval(`() => window.scrollTo(0, document.documentElement.scrollHeight)`)
 }
 
+func slidePageDownEndSmooth(page *rod.Page) {
+	page.MustEval(`() => window.scrollTo({top: document.documentElement.scrollHeight,left: 0,behavior: "smooth"})`)
+}
+
 // 按下键盘上的End键
 func pressKeyEnd(page *rod.Page) {
 	page.KeyActions().Type(input.End).MustDo()
