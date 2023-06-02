@@ -41,26 +41,32 @@ sudo /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-deb
 
 ----
 
+#### 第一版本
+
 | 操作类型 | 选择方式 | 选择元素 | 动作类型 | 动作内容 | 说明 |
-| -- |
-| navigate |   |   |   |   | www.baidu.com | 打开网址 |
+| --- | --- | --- |---| --- | --- |
+| navigate |    |    |   | www.baidu.com | 打开网址 |
 | find | element | "body > footer" | visible |     | 等待元素显示 |
 | find | element | "#pkg-examples" | cick |     | 找到某元素并点击 |
 | find | element | ".text"         | input | "hello" | 找到某元素然后输入内容 |
-| wait |      |      |   wait |   | 等待页面加载 |
+| wait |      |      | wait |   | 等待页面加载 |
 | sleep |     |    |
 
+#### 第二版本
 
-| 动作类型 | 选择方式 | 选择元素 | 动作内容 | 说明 |
-| navigate |     |     | www.baidu.com | 打开网址 |
-| visible | element | ".name" |    | 等待元素显示 |
-| invisible | element | "" |  | 等待元素隐藏 |
-| input | byId | "#title" |  "hello" | 找到某元素输入内容  |
-| click |    |     |    |  找到某元素并点击 |
-| wait |    |    |    | 等待页面加载 |
-| sleep |    |    | 10 | 停止10s |
-| eval |   |   | js script | 执行js代码 |
+| 动作类型 | 选择方式 | 选择元素 | 动作内容 | 说明                      |
+| --- | --- | --- | --- |-------------------------|
+| navigate |     |     | www.baidu.com | 打开网址                    |
+| visible | element | ".name" |    | 等待元素显示                  |
+| invisible | element | "" |  | 等待元素隐藏                  |
+| input | byId | "#title" |  "hello" | 找到某元素输入内容               |
+| click |    |     |    | 找到某元素并点击                |
+| wait |    |    |    | 等待页面加载                  |
+| sleep |    |    | 10 | 停止10s，单位秒               |
+| eval |   |   | js script | 执行js代码                  |
 | console |    |   |  js script | 在 DevTools 中执行js script |
+| scroll |   |   |  0  | 滑动页面，页面滑动方式             |
+
 
 ----
 

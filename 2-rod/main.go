@@ -17,7 +17,6 @@ import (
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/leafney/rose"
-	"os"
 	"time"
 )
 
@@ -100,7 +99,7 @@ func main() {
 	// 测试点击，输入
 	AutoRunAction(page)
 
-	swipeUpToLoadMore(page, 2)
+	swipePageLoadMore(page, 2)
 
 	fmt.Println("success")
 
@@ -155,14 +154,17 @@ func AutoRunAction(page *rod.Page) {
 			case "click":
 				page.Timeout(10 * time.Second).MustElement(m.Element).MustClick().CancelTimeout()
 			case "sleep":
-				time.Sleep(time.Duration(rose.StrToInt64(m.Content)) * time.Second)
+				rose.TSleep(rose.StrToInt64(m.Content))
 			case "wait":
 				page.MustWaitIdle().MustWaitIdle()
+			case "scroll":
+				swipePageLoadMore(page, rose.StrToInt(m.Content))
 			default:
 
 			}
-
-			page.MustWaitLoad().MustWaitIdle()
+			// 执行完成一次操作，等待页面加载
+			waitPageLoad(page)
+			pageSleepRand()
 		}
 	})
 
@@ -181,66 +183,112 @@ func AutoRunAction(page *rod.Page) {
 // ----------------------
 
 // 保存网页
-func saveHtml(page *rod.Page) {
-	pageHtml := page.MustEval(`() => document.documentElement.outerHTML`).Str()
-	os.WriteFile("tmp1.txt", []byte(pageHtml), 0644)
+func pageGetHtml(page *rod.Page) string {
+	return page.MustEval(`() => document.documentElement.outerHTML`).Str()
+	//os.WriteFile("tmp1.txt", []byte(pageHtml), 0644)
 }
 
 // 上滑页面加载更多
-func swipeUpToLoadMore(page *rod.Page, times int64) {
+func swipePageLoadMore(page *rod.Page, mode int) {
 	var (
-		defHeight       = 0
-		nowHeight       = 0
-		count     int64 = 0
+		defHeight = 0
+		nowHeight = 0
+		count     = 0
 	)
+	fmt.Println("开始自动上滑操作")
 
 	// 先获取当前页面的正文高度
-	defHeight = page.MustEval(`() => document.documentElement.scrollHeight`).Int()
+	defHeight = getPageHeight(page)
 	fmt.Printf("页面当前高度 [%v]\n", defHeight)
 
-	fmt.Println("开始自动上滑操作")
-	// 循环上滑
-	for {
-		fmt.Println("上滑页面到最大高度")
-		// 将页面滑动到正文最大高度
-		page.MustEval(`() => window.scrollTo(0, document.documentElement.scrollHeight)`)
-		fmt.Println("等待页面加载完成")
-		// 等待页面加载
-		page.MustWaitLoad().MustWaitIdle()
-		utils.Sleep(10)
-		fmt.Println("按下键盘End键")
-		// 触发按键End，使页面滚动到最底部
-		page.KeyActions().Type(input.End).MustDo()
-		fmt.Println("等待页面加载完成")
-		page.MustWaitLoad().MustWaitIdle()
-		utils.Sleep(10)
+	if mode > 100 {
+		//	滑动指定距离
+		slidePageDownDistance(page, mode)
+	} else if mode == 0 {
+		//	不滑动
 
-		count += 1
+	} else {
+		// 循环上滑
+		for {
+			fmt.Println("将页面滑动到正文最大高度")
+			slidePageDownEnd(page)
 
-		// 获取上滑后的页面正文高度
-		nowHeight = page.MustEval(`() => document.documentElement.scrollHeight`).Int()
-		fmt.Printf("页面上滑前高度 [%v] 上滑后高度 [%v]\n", defHeight, nowHeight)
+			fmt.Println("等待页面加载完成")
+			// 等待页面加载
+			page.MustWaitLoad().MustWaitIdle()
 
-		if nowHeight <= defHeight {
-			// 已滚动到最底部
-			fmt.Println("已滑动到页面最底部，停止自动上滑")
-			break
+			pageSleepRand()
+
+			fmt.Println("按下键盘End键")
+			// 触发按键End，使页面滚动到最底部
+			pressKeyEnd(page)
+
+			//page.KeyActions().Type(input.End).MustDo()
+			fmt.Println("等待页面加载完成")
+			page.MustWaitLoad().MustWaitIdle()
+
+			pageSleepRand()
+
+			count += 1
+
+			// 获取上滑后的页面正文高度
+			nowHeight = getPageHeight(page)
+			fmt.Printf("页面上滑前高度 [%v] 上滑后高度 [%v]\n", defHeight, nowHeight)
+
+			if nowHeight <= defHeight {
+				// 已滚动到最底部
+				fmt.Println("已滑动到页面最底部，停止自动上滑")
+				break
+			}
+
+			// 是否有滑动次数限制
+			if mode > 0 && mode <= count {
+				fmt.Println("达到自动滑动次数限制，停止自动滑动")
+				break
+			}
+
+			//	滑动后重置页面最新正文高度
+			defHeight = nowHeight
+
+			fmt.Println("等待下一次自动滑动")
+			pageSleepRand()
 		}
-
-		// 是否有滑动次数限制
-		if times > 0 && times <= count {
-			fmt.Println("达到自动滑动次数限制，停止自动滑动")
-			break
-		}
-
-		//	滑动后页面正文高度增加了，说明页面上滑了
-		defHeight = nowHeight
-
-		fmt.Println("等待一下再次上滑")
-		utils.Sleep(15)
 	}
 
 	fmt.Println("自动上滑操作结束")
+}
+
+func pageSleepRand() {
+	rose.TSleepRand(5, 30)
+}
+
+func pageSleep(sec int64) {
+	rose.TSleep(sec)
+}
+
+// 获取页面高度
+func getPageHeight(page *rod.Page) int {
+	return page.MustEval(`() => document.documentElement.scrollHeight`).Int()
+}
+
+// 页面向下滑动指定距离
+func slidePageDownDistance(page *rod.Page, distance int) {
+	jsStr := fmt.Sprintf(`() => window.scrollTo(0, %d)`, distance)
+	page.MustEval(jsStr)
+}
+
+// 滑动到页面底部
+func slidePageDownEnd(page *rod.Page) {
+	page.MustEval(`() => window.scrollTo(0, document.documentElement.scrollHeight)`)
+}
+
+// 按下键盘上的End键
+func pressKeyEnd(page *rod.Page) {
+	page.KeyActions().Type(input.End).MustDo()
+}
+
+func waitPageLoad(page *rod.Page) {
+	page.MustWaitLoad().MustWaitIdle()
 }
 
 // 禁止加载图片、视频、字体等资源
