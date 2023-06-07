@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/input"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/leafney/rose"
@@ -23,6 +24,17 @@ import (
 const (
 	WSID = "be444244-1ca1-4c13-89ba-a9ded25b4eea"
 )
+
+// 通过ws链接
+func main4() {
+	l := launcher.MustNewManaged("ws://127.0.0.1:7317")
+	// 配置
+	l.Set("")
+	l.Headless(false)
+
+	browser := rod.New().Client(l.MustClient()).MustConnect()
+	defer browser.MustClose()
+}
 
 func main3() {
 	rodHandle(WSID)
